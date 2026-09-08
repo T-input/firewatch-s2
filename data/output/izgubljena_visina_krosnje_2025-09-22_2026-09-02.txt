@@ -1,0 +1,14 @@
+Izgubljena visina krošnje — Deliblato (2025-09-22 -> 2026-09-02)
+Izvor pretpožarne visine: ETH Global Canopy Height 2020 (10 m)
+Definicija šume: CORINE 2018 (311/312/313)
+Prag požara: dNBR >= 0.27
+----------------------------------------------------------
+Opožarena površina (s ETH podatkom):   11965.4 ha
+  od toga ŠUMA (CORINE):                6732.6 ha
+Prosj. visina krošnje (sve opožareno):  15.0 m
+Prosj. visina krošnje (samo šuma):      17.3 m
+Najveća visina (šuma):                  29.7 m
+----------------------------------------------------------
+Gruba procjena drvne mase izgorjele šume (150 m3/ha):
+   ~1,010 tis. m3   (raspon 673-1347 tis. m3 za 100-200 m3/ha)
+   sastojine: bagrem, crni i obični bor (pjeskovita staništa)

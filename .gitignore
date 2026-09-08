@@ -1,0 +1,24 @@
+# --- tajne / okruženje ---
+.env
+
+# --- Python ---
+__pycache__/
+*.pyc
+
+# --- PODACI: ništa iz data/ ne ide u git ---
+data/*
+
+# ...osim granica područja (gpkg) - one idu u repo
+!data/Deliblato_granice.gpkg
+!data/Deliblato_granice_bez_dunava.gpkg
+
+# ...i gotovih rezultata u data/output/ (samo slike/gif/tekst)
+!data/output/
+data/output/*
+!data/output/*.gif
+!data/output/*.png
+!data/output/*.txt
+
+# frames i rasters se NE pushaju (ostaju ignorirani)
+data/output/frames/
+data/output/rasters/

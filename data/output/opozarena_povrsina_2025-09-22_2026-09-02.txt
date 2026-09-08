@@ -1,0 +1,12 @@
+Deliblato — procjena opožarene površine (dNBR)
+PRE=2025-09-22  POST=2026-09-02
+Pokrivenost AOI: PRE 100%, POST 100%
+Ukupno područje: 33043.2 ha
+
+Neopožareno             :   17924.2 ha  (54.2%)
+Niski intenzitet        :    3152.0 ha  ( 9.5%)
+Umjeren intenzitet      :    8024.2 ha  (24.3%)
+Visok intenzitet        :    3942.8 ha  (11.9%)
+
+JASNO OPOŽARENO (dNBR>=0.27): 11967.0 ha (119.67 km2)
+Uključujući niski intenzitet (dNBR>=0.1): 15119.0 ha
