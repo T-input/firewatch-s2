@@ -1,4 +1,4 @@
-# Analiza požara sa S2 - primjer Deliblato, Srbija, ljeto 2026.
+# Analiza požara sa Sentinel 2 satelitima - primjer Deliblato, Srbija, ljeto 2026.
 
 Skripte pisane u Pythonu. QGIS za vizalni pregled. Prije bilo čega treba `.env` s Copernicus
 podacima.
