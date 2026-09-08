@@ -1,15 +1,12 @@
 """
-01_connect_test.py — KORAK 1: Spajanje na Copernicus (CDSE) + popis snimaka.
+01_connect.py — Spajanje na Copernicus (CDSE) + popis snimaka.
 
 Pokretanje (u VS Code terminalu, iz mape scripts/):
-    python 01_connect_test.py
+    python 01_connect.py
 
-Što radi:
   1) Postavi vezu prema Copernicus Data Space Ecosystem (OAuth).
-  2) Učita granicu i izračuna područje snimanja (bbox).
-  3) Preko STAC kataloga ispiše sve dane sa Sentinel-2 snimkama u razdoblju.
-
-Ako ovo prođe bez greške — credentials i veza rade i možeš na korak 2.
+  2) Učitaj granicu i izračunaj područje snimanja (bbox).
+  3) Preko STAC kataloga ispiši sve dane sa Sentinel-2 snimkama u danom razdoblju.
 """
 import os
 import sys
@@ -52,7 +49,7 @@ def main():
         print(f"   {day}   ({len(ccs)} pločica, {cc_txt})")
 
     print("\n" + "=" * 64)
-    print("  ✓ Spajanje uspješno. Možeš pokrenuti 02_fetch_timeseries.py")
+    print("  ✓ Spajanje uspješno. Pokreni 02_fetch_timeseries.py")
     print("=" * 64)
 
 

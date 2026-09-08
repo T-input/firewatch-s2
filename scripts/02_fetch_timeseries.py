@@ -1,20 +1,17 @@
 """
-02_fetch_timeseries.py — KORAK 2: Preuzimanje snimaka (cijela serija).
+02_fetch_timeseries.py — Preuzimanje snimaka (cijela serija).
 
 Pokretanje:
     python 02_fetch_timeseries.py
 
-Što radi:
-  Za svaki dan sa snimkom (1.7.2026 - danas) preuzme tri proizvoda:
+  Za svaki dan sa snimkom (1.7.2026 - danas) preuzmi tri proizvoda:
     - truecolor  (prirodne boje)
     - falsecolor (SWIR kompozit — vatra/opožarene površine)
     - nbr        (Normalized Burn Ratio, float)
-  i spremi ih kao georeferencirane GeoTIFF-ove u data/output/rasters/.
-  Te iste GeoTIFF-ove kasnije koriste skripte 03 (GIF) i 04 (usporedba),
-  a možeš ih otvoriti i u QGIS-u.
+  i spremi ih kao georef. GeoTIFF-ove u data/output/rasters/.
+  Te iste GeoTIFF-ove kasnije trebaju za skriptu 03 i 04, a i rade export za QGIS.
 
-  Preuzimanje se NE ponavlja za datoteke koje već postoje (možeš prekinuti i
-  nastaviti). Za ponovno preuzimanje obriši datoteke iz rasters/.
+  Preuzimanje se NE ponavlja za datoteke koje već postoje. Za ponovno preuzimanje obriši datoteke iz rasters/.
 """
 import os
 import sys

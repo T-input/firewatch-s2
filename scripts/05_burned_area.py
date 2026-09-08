@@ -1,27 +1,30 @@
 """
-05_burned_area.py — KORAK 5: Procjena ukupne opožarene površine (dNBR).
+05_burned_area.py — Procjena ukupne opožarene površine (dNBR - Differenced Normalized Burn Ratio).
 
 Metoda (Key & Benson / USGS):
     NBR  = (B08 - B12) / (B08 + B12)            # koristi NIR i SWIR
     dNBR = NBR_prije - NBR_poslije              # opožareno = visok pozitivan dNBR
 
+    Citation: Key, Carl H.; Benson, Nathan C. 2006. Landscape Assessment (LA). 
+            In: Lutes, Duncan C.; Keane, Robert E.; Caratti, John F.; Key, Carl H.; Benson, Nathan C.; Sutherland, Steve; Gangi, Larry J. 2006. 
+            FIREMON: Fire effects monitoring and inventory system. Gen. Tech. Rep. RMRS-GTR-164-CD. Fort Collins
+            CO: U.S. Department of Agriculture, Forest Service, Rocky Mountain Research Station. p. LA-1-55
+    Link: https://research.fs.usda.gov/download/treesearch/24066.pdf
+    
 Uspoređuju se dvije Sentinel-2 snimke iz istog doba godine (rujan), da
-prirodno sezonsko sušenje vegetacije ne ulazi u dNBR kao lažni požar:
+prirodno sezonsko sušenje vegetacije od srpnja ne ulazi u dNBR kao lažni požar:
     PRE  (prošli rujan, prije požara) : 2025-09-22
     POST (ovaj rujan, aktualno)       : 2026-09-02
-(možeš ih promijeniti dolje ili predati kao argumente:
-    python 05_burned_area.py 2025-09-22 2026-09-02 )
 
-Računa površinu po razredima težine i UKUPNO, unutar granice zaštićenog
+Računaj površinu po razredima težine i bruto, unutar granice zaštićenog
 područja. Sprema:
     data/output/rasters/dnbr_<PRE>_<POST>.tif      (dNBR, za QGIS)
     data/output/rasters/burnclass_<PRE>_<POST>.tif (razredi 0-3, za QGIS)
     data/output/opozarena_povrsina_<PRE>_<POST>.png (karta + legenda)
     data/output/opozarena_povrsina_<PRE>_<POST>.txt (sažetak površina)
 
-VAŽNO: procjena je približna. Oblaci, sjene, vodene površine i poljoprivredne
-promjene mogu lažno podići/spustiti dNBR. Za službenu brojku validiraj na
-vedrim snimkama i po mogućnosti maskiraj oblake.
+Napomena: procjena je približna. Oblaci, sjene, vodene površine i poljoprivredne
+promjene mogu lažno podići/spustiti dNBR.
 """
 import os
 import sys
@@ -39,7 +42,7 @@ import config as cfg
 import sh_utils as sh
 import evalscripts as ev
 
-# --- Datumi snimaka (možeš promijeniti ili predati kao argumenti) ----------
+# --- Datumi snimaka (promijeniti po želji) ----------
 PRE_DATE = "2025-09-22"    # prošli rujan (prije ovogodišnjeg požara)
 POST_DATE = "2026-09-02"   # ovaj rujan (aktualno stanje)
 
@@ -57,7 +60,7 @@ BURN_THRESHOLD = 0.27    # "jasno opožareno" (naslovna brojka)
 def get_nbr(bbox, size, day):
     """
     Vrati (nbr, mask) za dan. Koristi već preuzeti GeoTIFF ako postoji;
-    inače se spaja na Copernicus i preuzme (credentials trebaju samo tada).
+    inače se spaja na Copernicus i preuzme (credentials trebaju samo tada u .env file).
     """
     tif = cfg.RASTER_DIR / f"{day}_nbr.tif"
     if tif.exists():
@@ -85,10 +88,10 @@ def main():
     post = sys.argv[2] if len(sys.argv) > 2 else POST_DATE
     print(f"dNBR usporedba:  PRE={pre}  ->  POST={post}\n")
 
-    # Rastersku mrežu (bbox/size) uzimamo iz glavne granice — ista kao u
+    # Rastersku mrežu (bbox/size) uzimam iz glavne granice — ista kao u
     # ostatku pipelinea, da se NBR rasteri iz koraka 2 mogu ponovno iskoristiti.
     _grid_gdf, bbox, size = sh.load_aoi()
-    # Za račun površine i prikaz koristimo granicu BEZ DUNAVA.
+    # izrezan Dunav da ne radi šum.
     gdf = sh.load_boundary(cfg.AOI_GPKG_BURN)
     print(f"Granica (račun): {cfg.AOI_GPKG_BURN.name}")
 
@@ -100,7 +103,7 @@ def main():
     aoi = sh.aoi_pixel_mask(gdf, bbox, (size[1], size[0]))
     valid = (m_pre >= 0.5) & (m_post >= 0.5) & aoi
 
-    # upozorenje ako neka snimka ne pokriva cijelo područje
+    # obavijest ako neka snimka ne pokriva cijelo područje
     cov_pre = sh.data_coverage(m_pre >= 0.5, aoi)
     cov_post = sh.data_coverage(m_post >= 0.5, aoi)
     print(f"\nPokrivenost AOI: PRE {cov_pre*100:.0f}%, POST {cov_post*100:.0f}%")
@@ -112,7 +115,7 @@ def main():
     cls = classify(dnbr)
     cls_masked = np.where(valid, cls, 0)
 
-    px_area_ha = (cfg.RESOLUTION ** 2) / 10_000.0   # m2 -> ha
+    px_area_ha = (cfg.RESOLUTION ** 2) / 10_000.0   # hektri
     total_aoi_ha = int(aoi.sum()) * px_area_ha
 
     print("\n" + "=" * 58)
@@ -139,7 +142,7 @@ def main():
           f"{burned_low_ha:.1f} ha")
     print("=" * 58)
 
-    # --- spremi GeoTIFF-ove (za QGIS) --------------------------------------
+    # --- spremi GeoTIFF-ove za Q --------------------------------------
     dnbr_out = np.where(valid, dnbr, np.nan).astype("float32")
     sh.save_geotiff(dnbr_out[:, :, np.newaxis], bbox,
                     cfg.RASTER_DIR / f"dnbr_{pre}_{post}.tif")
@@ -171,7 +174,7 @@ def main():
     fig.savefig(png, dpi=130, bbox_inches="tight")
     plt.close(fig)
 
-    # --- tekstualni sažetak -------------------------------------------------
+    # --- .txt report -------------------------------------------------
     txt = cfg.OUT_DIR / f"opozarena_povrsina_{pre}_{post}.txt"
     with open(txt, "w", encoding="utf-8") as f:
         f.write(f"Deliblato — procjena opožarene površine (dNBR)\n")

@@ -1,4 +1,4 @@
-# Instalacija (u VS Code terminalu):  pip install -r requirements.txt
+# pip install -r requirements.txt
 sentinelhub>=3.10
 geopandas>=0.14
 rasterio>=1.3

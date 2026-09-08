@@ -1,17 +1,16 @@
 """
-04_compare_sept.py — KORAK 4: Usporedba rujan 2025. vs rujan 2026.
+04_compare_sept.py — Usporedba rujan 2025. vs rujan 2026.
 
 Pokretanje:
     python 04_compare_sept.py
 
-Što radi:
-  Za svaku godinu (2025, 2026) nađe NAJVEDRIJU snimku u rujnu (najmanje oblaka),
-  preuzme tri proizvoda (truecolor / falsecolor / nbr) i složi usporednu sliku
-  3 reda (proizvodi) x 2 stupca (godine) s granicom područja.
+  Za svaku godinu (2025, 2026) nađi snimku sa najmanje naoblake u rujnu,
+  preuzmi truecolor / falsecolor / nbr i složi usporednu sliku
+  3 reda (tc / fc / nbr) x 2 stupca (godine) s granicom područja.
 
   Izlaz:
     data/output/usporedba_rujan_2025_2026.png
-    + pojedinačni GeoTIFF-ovi u rasters/ (za QGIS)
+    + GeoTIFF-ovi u rasters/ za Q.
 """
 import calendar
 import datetime as dt
@@ -33,10 +32,9 @@ from evalscripts import PRODUCTS
 
 def best_day(config, bbox, gdf, year: int, month: int):
     """
-    Nađi najvedriji dan u mjesecu KOJI POKRIVA CIJELO područje.
-    Ide po danima od najmanje oblaka; za svaki provjeri pokrivenost (jeftino,
-    gruba maska) i vrati prvi koji zadovolji config.MIN_COVERAGE.
-    Ako nijedan ne zadovolji prag — vrati najbolje pokriven dan (uz upozorenje).
+    Nađi najvedriji dan u mjesecu za AOI.
+    Idi po danima od najmanje oblaka; za svaki provjeri pokrivenost i vrati onaj koji zadovolji config.MIN_COVERAGE.
+    Ako nijedan ne zadovolji prag — vrati najbolje pokriven dan.
     """
     start = dt.date(year, month, 1)
     last = calendar.monthrange(year, month)[1]

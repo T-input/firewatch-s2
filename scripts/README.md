@@ -1,96 +1,89 @@
-# Deliblato — satelitska analiza požara (Sentinel-2 / Copernicus)
+# Analiza požara sa S2 - primjer Deliblato, Srbija, ljeto 2026.
 
-Praćenje požara u zaštićenom području **Deliblatska peščara** (Srbija) pomoću
-Sentinel-2 snimaka s Copernicus Data Space Ecosystem-a.
+Skripte pisane u Pythonu. QGIS za vizalni pregled. Prije bilo čega treba `.env` s Copernicus
+podacima.
 
-## Što skripte rade
+Popis:
 
-| Skripta | Namjena |
-|---|---|
-| `01_connect_test.py` | Spajanje na Copernicus (CDSE) + popis dostupnih snimaka |
-| `02_fetch_timeseries.py` | Preuzimanje snimaka (1.7.2026 – danas) kao GeoTIFF |
-| `03_build_gif.py` | Animirani GIF s preklopljenom granicom područja |
-| `04_compare_sept.py` | Usporedba rujan 2025. vs rujan 2026. |
-| `05_burned_area.py` | Procjena ukupne opožarene površine (dNBR, ha/km²) |
-| `06_canopy_loss.py` | Karta izgubljene visine krošnje u metrima (ETH 2020 × dNBR) |
+- `01_connect.py` - testiraj spajanje na Copernicus, ispiši dostupne snimke
+- `02_fetch_timeseries.py` - skini snimke (u mom primjeru 1.7.2026 do danas), .TIF
+- `03_build_gif.py` - GIF s granicom preko snimaka
+- `04_compare_sept.py` - rujan 2025 vs rujan 2026
+- `05_burned_area.py` - opožarena površina (dNBR), u ha/km2
+- `06_canopy_loss.py` - karta izgubljene visine krošnje (m)
 
-Pomoćni moduli: `config.py` (postavke), `evalscripts.py` (Sentinel Hub skripte),
-`sh_utils.py` (veza + preuzimanje), `viz.py` (crtanje + GIF).
+Aux. skripte: `config.py`, `evalscripts.py`,
+`sh_utils.py`, `viz.py`.
 
-Tri prikaza (proizvoda) za svaku snimku:
-- **truecolor** — prirodne boje (dim, izgled terena)
-- **falsecolor** — SWIR kompozit B12/B8A/B04 (aktivna vatra i opožarene površine)
-- **nbr** — Normalized Burn Ratio, kvantitativni indeks opožarenosti
+Glavni EO inputi su tri Copernicus proizvoda: RedGreenBlue, SWIR falsecolor
+(čak se vidi se živa vatra) i NBR indeks.
 
-## Priprema (jednom)
-
-1. Instaliraj pakete:
-   ```
-   pip install -r requirements.txt
-   ```
-
-2. OAuth podaci za Copernicus. Na
-   <https://shapps.dataspace.copernicus.eu/dashboard/> → *User settings* →
-   *OAuth clients* → **Create**. Dobiješ **Client ID** i **Secret**.
-
-3. Kopiraj `.env.example` u `G:\Deliblato\.env` i upiši svoje podatke:
-   ```
-   SH_CLIENT_ID=...
-   SH_CLIENT_SECRET=...
-   ```
-   `.env` je kao lozinka — ne dijeli je i ne stavljaj u git.
-
-## Pokretanje (redom)
-
-Iz mape `scripts/` u VS Code terminalu:
+## Priprema
 
 ```
-python 01_connect_test.py        # provjera veze
-python 02_fetch_timeseries.py    # preuzimanje (potraje)
-python 03_build_gif.py           # GIF-ovi
-python 04_compare_sept.py        # usporedba rujna
-python 05_burned_area.py         # procjena opožarene površine (dNBR)
-python 06_canopy_loss.py         # karta izgubljene visine krošnje (m)
+pip install -r requirements.txt
 ```
 
-`06_canopy_loss.py` koristi **ETH Global Canopy Height 2020 (10 m)** kao
-pretpožarnu visinu krošnje u metrima (Lang i sur. 2023, CC BY 4.0). Pri prvom pokretanju
-preuzme potrebne ETH pločice u `data\eth_tiles\` (jednokratno, može biti
-nekoliko stotina MB — ETH server ne podržava čitanje po dijelovima), a zatim
-lokalno izreže prozor nad AOI. Ne treba Copernicus credentials, ali treba
-internet i preuzete NBR rastere za oba datuma. Izgubljena visina = ETH visina
-ondje gdje je dNBR ≥ 0,27.
+Copernicus OAuth: na https://shapps.dataspace.copernicus.eu/dashboard/ pod
+User settings -> OAuth clients -> Create. Kopiraj `.env.example` u
+root, u njega upiši Client ID i Secret, izbriši `.example` iz imena i imaš `.env`. `.env` ne ide u git.
 
-**Definicija "šume" dolazi iz CORINE Land Cover 2018** (klase 311/312/313).
-Skripta prvo traži lokalni CORINE gpkg u `data\` (npr.
-`U2018_CLC2018_V2020_20u1.gpkg`) i iz njega čita samo šumske poligone unutar AOI
-(prostorni filtar — brzo i za višegigabajtnu datoteku); ako ga nema, pada na
-mrežni EEA discomap upit, a ako ni to ne radi — na rezervni prag visine
-`FOREST_MIN_H` (5 m). Za prijelaznu šumu/šikaru (klasa 324) postavi
-`INCLUDE_SHRUB = True`.
+## Struktura radnog direktorija
+- root (meni je to G:\Deliblato)
+   - data
+      - eth_tiles (ručno download)
+      - output
+         - frames
+         - rasters
+      - AOI.gpkg
+      - CORINE.gpkg
+   - scripts
+   - .env
 
-Karta prikazuje izgubljenu visinu **samo za CORINE šumu** (stepa/travnjak je
-izuzeta). Uz to se računa **gruba procjena drvne mase** izgorjele šume
-(`WOOD_M3_HA`, zadano 150 m³/ha s rasponom 100–200) — okvirno za dominantne
-sastojine bagrema, crnog i običnog bora na pješčanim staništima; vrijednost
-prilagodi u skripti ako imaš podatke gospodarske osnove.
+## Pokretanje
 
-`05_burned_area.py` uspoređuje NBR snimke iz istog doba godine — prošlogodišnji
-i ovogodišnji rujan (zadano `2025-09-22` → `2026-09-02`; druge datume možeš
-predati kao argumente: `python 05_burned_area.py 2025-09-22 2026-09-02`) — i daje
-površinu po razredima težine te ukupnu opožarenu površinu u ha/km². Koristi
-granicu bez Dunava (`Deliblato_granice_bez_dunava.gpkg`).
+Iz mape `scripts`:
 
-## Rezultati
+```
+python 01_connect_test.py
+python 02_fetch_timeseries.py
+python 03_build_gif.py
+python 04_compare_sept.py
+python 05_burned_area.py
+python 06_canopy_loss.py
+```
 
-Sve u `G:\Deliblato\data\output\`:
-- `deliblato_truecolor.gif`, `deliblato_falsecolor.gif`, `deliblato_nbr.gif`
+## Izvori
+
+Key, C. H., & Benson, N. C. (2006). Landscape assessment (LA): Sampling and analysis methods. In D. C. Lutes, R. E. Keane, J. F. Caratti, C. H. Key, N. C. Benson, S.
+Sutherland, & L. J. Gangi (Eds.), FIREMON: Fire effects monitoring and inventory system (General Technical Report RMRS-GTR-164-CD, pp. LA-1–LA-55). U.S. Department 
+of Agriculture, Forest Service, Rocky Mountain Research Station.
+
+Lang, N., Jetz, W., Schindler, K., & Wegner, J. D. (2023). A high-resolution canopy height model of the Earth. Nature Ecology & Evolution, 7(11), 1778–1789. 
+https://doi.org/10.1038/s41559-023-02206-6
+
+Ćuk, M., Perić, R., Čarni, A., Ilić, M., Vlku, A., Igić, D., Vukov, D. (2025). Flora and vegetation of Deliblato Sands (Serbia): A review of floristic and vegetation
+research through the centuries.
+Matica Srpska Journal for Natural Sciences, (149), 27–[zadnja stranica]. 
+https://doiserbia.nb.rs/ft.aspx?id=0352-49062549027C
+
+CORINE Land Cover 2018 (vector/raster 100 m), Europe, 6-yearly
+European Union's Copernicus Land Monitoring Service information,
+Link: https://land.copernicus.eu/en/products/corine-land-cover/clc2018 (Accessed on 08.09.2026.)
+DOI: https://doi.org/10.2909/71c95a07-e296-44fc-b22b-415f42acfdf0
+
+Contains modified Copernicus Sentinel data for years 2025 and 2026.
+
+## Rezultati (u `data\output\`)
+
+- GIF-ovi: `deliblato_truecolor.gif`, `_falsecolor.gif`, `_nbr.gif`
 - `usporedba_rujan_2025_2026.png`
-- `rasters/` — GeoTIFF-ovi (možeš otvoriti u **QGIS**, georeferencirani, EPSG:32634)
-- `frames/` — pojedinačni kadrovi
+- `opozarena_povrsina_*.png/.txt`, `izgubljena_visina_krosnje_*.png/.txt`
+- `rasters\` - GeoTIFF za QGIS (EPSG:32634)
+- `frames\` - pojedini kadrovi
 
-## Podešavanje
+## Postavke
 
-U `config.py` možeš mijenjati: vremenski raspon (`START_DATE`/`END_DATE`),
-rezoluciju (`RESOLUTION`), buffer oko granice, filtriranje oblaka (`MAX_CLOUD`).
-Band-kombinacije prikaza su u `evalscripts.py`.
+Glavno je u `config.py`: datumi (`START_DATE`/`END_DATE`), rezolucija, buffer
+oko granice, oblaci (`MAX_CLOUD`), prag pokrivenosti (`MIN_COVERAGE`).
+Band-kombinacije za prikaze su u `evalscripts.py`.

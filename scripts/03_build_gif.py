@@ -1,12 +1,11 @@
 """
-03_build_gif.py — KORAK 3: Izrada animiranog GIF-a s preklopljenom granicom.
+03_build_gif.py — Izrada  GIF-a s preklopljenom granicom.
 
 Pokretanje:
     python 03_build_gif.py                # svi proizvodi
     python 03_build_gif.py falsecolor     # samo jedan proizvod
 
-Što radi:
-  Učita GeoTIFF-ove iz koraka 2, preko svake snimke nacrta granicu zaštićenog
+  Učitaj GeoTIFF-ove iz 02, preko svake snimke nacrta granicu zaštićenog
   područja i datum, te ih spoji u GIF. Za svaki proizvod nastaje jedan GIF:
     data/output/deliblato_truecolor.gif
     data/output/deliblato_falsecolor.gif
